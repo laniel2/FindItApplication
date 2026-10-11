@@ -19,7 +19,9 @@ export function useLocalStorage(key, initialValue) {
       try {
         if (value === null || value === undefined) localStorage.removeItem(key);
         else localStorage.setItem(key, JSON.stringify(value));
-      } catch { /* storage full or blocked: ignore */ }
+      } catch (err) {
+        console.warn(`findit: could not save ${key} to localStorage`, err);
+      }
     },
     { deep: true, flush: 'sync' }
   );
