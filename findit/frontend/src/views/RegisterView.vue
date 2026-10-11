@@ -9,6 +9,7 @@ import { useToast } from '../composables/useToast';
 const router = useRouter();
 const { register } = useAuth();
 const toast = useToast();
+const backgroundVideoUrl = '/MaterDei.mp4';
 const showPassword = ref(false);
 
 const { values, submitting, serverError, blur, fieldError, submit } = useForm(
@@ -33,21 +34,22 @@ async function onSubmit() {
 
 <template>
   <div class="auth-page">
+    <video class="auth-video" autoplay muted loop playsinline :src="backgroundVideoUrl" aria-hidden="true"></video>
+    <div class="auth-overlay" aria-hidden="true"></div>
+
     <aside class="auth-side" aria-hidden="true">
-      <div class="brand light"><span class="brand-mark"><i class="bi bi-tag-fill"></i></span><span>FindIt</span></div>
-      <div class="tag-art">
-        <span class="tag-hole"></span>
-        <span class="tag-chip lost">Lost</span>
-        <h2>Black calculator</h2>
-        <p><i class="bi bi-geo-alt"></i>Room 204, before lunch</p>
-        <p><i class="bi bi-person"></i>Name written inside the cover</p>
+      <div class="auth-brand-stack">
+        <div class="auth-brand-row">
+          <img class="auth-logo" src="https://staging.materdeicollege.com/wp-content/uploads/2024/04/cropped-MDC-Logo-clipped-1-300x300.png" alt="Mater Dei College logo" />
+          <div class="brand light auth-brand"><span class="brand-mark"><i class="bi bi-tag-fill"></i></span><span>FindIt MaterDei</span></div>
+        </div>
       </div>
       <p class="auth-tagline">Post what you lost or found. Students and staff will see it right away.</p>
     </aside>
 
     <main class="auth-main">
       <div class="auth-card">
-        <div class="brand d-lg-none mb-4"><span class="brand-mark"><i class="bi bi-tag-fill"></i></span><span>FindIt</span></div>
+        <div class="brand d-lg-none mb-4"><span class="brand-mark"><i class="bi bi-tag-fill"></i></span><span>FindIt MaterDei</span></div>
         <h1>Create your account</h1>
         <p class="auth-sub">It takes less than a minute.</p>
 
