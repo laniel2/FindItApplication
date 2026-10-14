@@ -47,6 +47,12 @@ Open a terminal in `frontend` and run `npm run dev`. (No need to run `npm instal
 ---
 
 ## Good to know
+- On first login, the demo also creates `admin@gmail.com` (`FindItAdmin123`) and
+  `student@gmail.com` (`FindItStudent123`). The admin can edit, mark returned, and
+  delete any post. These are classroom demo accounts, not secure production credentials.
+- On a found post, another account can click **This is my missing item**. On a lost
+  post, click **I found this**. After confirmation, the post is marked returned and
+  appears under the poster’s **My returned items**.
 - **Data is per browser.** Posts you make in Chrome will not appear in Edge or on another computer.
   To see data from two students, create two accounts in the same browser and log in and out.
 - **To see the saved data:** press F12 → *Application* tab → *Local Storage* → `http://localhost:5173`.

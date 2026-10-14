@@ -24,14 +24,16 @@ function onLogout() {
       </router-link>
 
       <nav class="top-links" aria-label="Main">
-        <router-link :to="{ name: 'items' }" exact-active-class="active">Browse</router-link>
+        <router-link :to="{ name: 'items' }" :class="{ active: $route.name === 'items' && !$route.query.view }">Browse</router-link>
+        <router-link :to="{ name: 'items', query: { view: 'my-lost' } }" :class="{ active: $route.query.view === 'my-lost' }">My lost items</router-link>
+        <router-link :to="{ name: 'items', query: { view: 'my-returned' } }" :class="{ active: $route.query.view === 'my-returned' }">My returned items</router-link>
         <router-link :to="{ name: 'item-new' }" active-class="active">Post an item</router-link>
       </nav>
 
       <div class="top-user">
         <router-link :to="{ name: 'profile' }" class="user-chip" aria-label="My profile">
           <UserAvatar :user="user" :size="34" />
-          <span class="user-name">{{ user?.name }}</span>
+          <span class="user-name">{{ user?.name }}<small v-if="user?.role === 'admin'" class="d-block">Admin</small></span>
         </router-link>
         <button type="button" class="btn btn-light btn-sm" @click="onLogout">
           <i class="bi bi-box-arrow-right"></i><span class="d-none d-sm-inline ms-1">Log out</span>
@@ -42,7 +44,9 @@ function onLogout() {
 
   <!-- Phone navigation -->
   <nav class="bottom-nav" aria-label="Main (mobile)">
-    <router-link :to="{ name: 'items' }" exact-active-class="active"><i class="bi bi-search"></i>Browse</router-link>
+    <router-link :to="{ name: 'items' }" :class="{ active: $route.name === 'items' && !$route.query.view }"><i class="bi bi-search"></i>Browse</router-link>
+    <router-link :to="{ name: 'items', query: { view: 'my-lost' } }" :class="{ active: $route.query.view === 'my-lost' }"><i class="bi bi-exclamation-circle"></i>My lost</router-link>
+    <router-link :to="{ name: 'items', query: { view: 'my-returned' } }" :class="{ active: $route.query.view === 'my-returned' }"><i class="bi bi-check2-circle"></i>Returned</router-link>
     <router-link :to="{ name: 'item-new' }" active-class="active"><i class="bi bi-plus-circle"></i>Post</router-link>
     <router-link :to="{ name: 'profile' }" active-class="active"><i class="bi bi-person"></i>Profile</router-link>
   </nav>

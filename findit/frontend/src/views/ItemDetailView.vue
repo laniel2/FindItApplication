@@ -12,22 +12,16 @@ const router = useRouter();
 const toast = useToast();
 const { user } = useAuth();
 const { formatDate, timeAgo } = useFormat();
-const { getItem, toggleResolved, removeItem } = useItems();
+const { getItem, toggleResolved, claimItem, removeItem } = useItems();
 
 const item = ref(null);
 const loading = ref(true);
 const error = ref('');
 const confirming = ref(false);
+const confirmingContact = ref(false);
 const busy = ref(false);
 
-const isOwner = computed(() => item.value && item.value.user_id === user.value.id);
-const mailto = computed(() => {
-  if (!item.value) return '#';
-  const subject = encodeURIComponent(`FindIt: ${item.value.title}`);
-  const body = encodeURIComponent(`Hi ${item.value.poster_name}, I'm writing about "${item.value.title}" that you posted on FindIt.`);
-  return `mailto:${item.value.poster_email}?subject=${subject}&body=${body}`;
-});
-
+const isOwner = computed(() => item.value && (item.value.user_id === user.value.id || user.value.role === 'admin'));
 onMounted(async () => {
   try {
     item.value = await getItem(props.id);
@@ -58,6 +52,17 @@ async function onDelete() {
     toast.error(err.message);
     busy.value = false;
     confirming.value = false;
+  }
+}
+
+async function onConfirmContact() {
+  confirmingContact.value = false;
+  try {
+    item.value = await claimItem(item.value.id);
+    toast.success('Marked as returned.');
+    router.push({ name: 'items', query: { view: 'my-returned' } });
+  } catch (err) {
+    toast.error(err.message);
   }
 }
 </script>
@@ -101,13 +106,23 @@ async function onDelete() {
             </button>
             <button class="btn btn-outline-danger" @click="confirming = true"><i class="bi bi-trash3 me-1"></i>Delete</button>
           </template>
-          <a v-else :href="mailto" class="btn btn-primary">
-            <i class="bi bi-envelope me-1"></i>{{ item.type === 'lost' ? 'I found this' : 'This is mine' }}
-          </a>
+          <button v-else-if="item.status === 'open'" type="button" class="btn btn-primary" @click="confirmingContact = true">
+            <i class="bi bi-check2-circle me-1"></i>{{ item.type === 'lost' ? 'I found this' : 'This is my missing item' }}
+          </button>
         </div>
-        <p v-if="!isOwner" class="field-hint mt-2">This opens an email to {{ item.poster_name }} ({{ item.poster_email }}).</p>
+        <p v-if="!isOwner && item.status === 'resolved'" class="field-hint mt-2">This post is now in {{ item.poster_name }}’s returned items.</p>
       </div>
     </article>
+
+    <ConfirmModal
+      :open="confirmingContact"
+      :title="item?.type === 'lost' ? 'Are you sure you found this item?' : 'Are you sure this is yours?'"
+      :message="`Confirming will mark “${item?.title}” as returned and move it to the poster’s Returned items.`"
+      :confirm-text="item?.type === 'lost' ? 'Yes, I found it' : 'Yes, it is mine'"
+      cancel-text="Cancel"
+      @confirm="onConfirmContact"
+      @cancel="confirmingContact = false"
+    />
 
     <ConfirmModal
       :open="confirming"

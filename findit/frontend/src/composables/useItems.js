@@ -39,11 +39,13 @@ export function useItems() {
     return updated;
   }
 
+  const claimItem = async (id) => (await api(`/items/${id}/claim`, { method: 'PATCH' })).item;
+
   // DELETE
   async function removeItem(id) {
     await api(`/items/${id}`, { method: 'DELETE' });
     items.value = items.value.filter((x) => x.id !== id);
   }
 
-  return { items, loading, error, fetchItems, getItem, createItem, updateItem, toggleResolved, removeItem };
+  return { items, loading, error, fetchItems, getItem, createItem, updateItem, toggleResolved, claimItem, removeItem };
 }

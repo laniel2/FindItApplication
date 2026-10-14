@@ -8,6 +8,7 @@ defineProps({
   title: { type: String, default: 'Are you sure?' },
   message: { type: String, default: '' },
   confirmText: { type: String, default: 'Confirm' },
+  cancelText: { type: String, default: 'Keep it' },
   busy: { type: Boolean, default: false },
 });
 const emit = defineEmits(['confirm', 'cancel']);
@@ -24,7 +25,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <h2>{{ title }}</h2>
         <p>{{ message }}</p>
         <div class="d-flex justify-content-end gap-2">
-          <button type="button" class="btn btn-light" @click="emit('cancel')">Keep it</button>
+          <button type="button" class="btn btn-light" @click="emit('cancel')">{{ cancelText }}</button>
           <button type="button" class="btn btn-danger" :disabled="busy" @click="emit('confirm')">
             {{ busy ? 'Working…' : confirmText }}
           </button>

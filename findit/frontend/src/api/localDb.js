@@ -55,6 +55,7 @@ const isGmail = (v) => /^[^\s@]+@gmail\.com$/i.test(String(v || '').trim());
 const publicUser = (u) => ({
   id: u.id, name: u.name, student_id: u.student_id, email: u.email,
   course: u.course, year_level: u.year_level, avatar: u.avatar, created_at: u.created_at,
+  role: u.role || 'student',
 });
 
 function makeSession(user) {
@@ -122,12 +123,36 @@ async function register({ body = {} }) {
 }
 
 async function login({ body = {} }) {
+  await ensureDemoAccounts();
   const mail = String(body.email || '').trim().toLowerCase();
   const user = read(USERS).find((u) => u.email === mail);
   if (!user || user.password_hash !== (await hash(`${mail}:${body.password || ''}`))) {
     throw httpError(401, 'Wrong email or password');
   }
   return makeSession(user);
+}
+
+// This app stores everything in this browser. These demo credentials are for
+// local classroom use only; a real deployment needs server-side account roles.
+let demoAccountsReady;
+function ensureDemoAccounts() {
+  if (!demoAccountsReady) demoAccountsReady = (async () => {
+    const users = read(USERS);
+    const demos = [
+      { name: 'FindIt Admin', student_id: 'ADMIN-001', email: 'admin@gmail.com', password: 'FindItAdmin123', role: 'admin' },
+      { name: 'Demo Student', student_id: 'STUDENT-001', email: 'student@gmail.com', password: 'FindItStudent123', role: 'student' },
+    ];
+    let next = [...users];
+    for (const demo of demos) {
+      const mail = demo.email;
+      if (next.some((u) => u.email === mail)) continue;
+      next.push({ id: nextId(next), name: demo.name, student_id: demo.student_id, email: mail,
+        password_hash: await hash(`${mail}:${demo.password}`), course: '', year_level: '', avatar: '',
+        role: demo.role, created_at: now() });
+    }
+    if (next.length !== users.length) write(USERS, next);
+  })();
+  return demoAccountsReady;
 }
 
 const me = () => ({ user: publicUser(currentUser()) });
@@ -181,7 +206,7 @@ function findItem(id) {
 function ownItem(id, action) {
   const user = currentUser();
   const item = findItem(id);
-  if (item.user_id !== user.id) throw httpError(403, `You can only ${action} your own posts`);
+  if (item.user_id !== user.id && user.role !== 'admin') throw httpError(403, `You can only ${action} your own posts`);
   return item;
 }
 
@@ -222,7 +247,19 @@ function updateItem({ params, body = {} }) {
 // UPDATE status: open <-> resolved
 function toggleItem({ params }) {
   const item = ownItem(params.id, 'update');
-  const updated = { ...item, status: item.status === 'open' ? 'resolved' : 'open', updated_at: now() };
+  const status = item.status === 'open' ? 'resolved' : 'open';
+  const updated = { ...item, status, resolved_by_user_id: status === 'open' ? null : item.resolved_by_user_id || currentUser().id, updated_at: now() };
+  write(ITEMS, read(ITEMS).map((i) => (i.id === item.id ? updated : i)));
+  return { item: withPoster(updated) };
+}
+
+// Another student confirms they found or recognized an open item.
+function claimItem({ params }) {
+  const user = currentUser();
+  const item = findItem(params.id);
+  if (item.user_id === user.id) throw httpError(403, 'You cannot claim your own post');
+  if (item.status === 'resolved') throw httpError(409, 'This item has already been marked as returned');
+  const updated = { ...item, status: 'resolved', resolved_by_user_id: user.id, updated_at: now() };
   write(ITEMS, read(ITEMS).map((i) => (i.id === item.id ? updated : i)));
   return { item: withPoster(updated) };
 }
@@ -245,6 +282,7 @@ const routes = [
   ['GET', /^\/items\/(?<id>\d+)$/, getItem],
   ['PUT', /^\/items\/(?<id>\d+)$/, updateItem],
   ['PATCH', /^\/items\/(?<id>\d+)\/resolve$/, toggleItem],
+  ['PATCH', /^\/items\/(?<id>\d+)\/claim$/, claimItem],
   ['DELETE', /^\/items\/(?<id>\d+)$/, deleteItem],
 ];
 
