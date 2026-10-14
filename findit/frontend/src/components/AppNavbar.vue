@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import AccountSwitcher from './AccountSwitcher.vue';
 import UserAvatar from './UserAvatar.vue';
 
 const { user, logout } = useAuth();
@@ -31,6 +32,7 @@ function onLogout() {
       </nav>
 
       <div class="top-user">
+        <AccountSwitcher />
         <router-link :to="{ name: 'profile' }" class="user-chip" aria-label="My profile">
           <UserAvatar :user="user" :size="34" />
           <span class="user-name">{{ user?.name }}<small v-if="user?.role === 'admin'" class="d-block">Admin</small></span>

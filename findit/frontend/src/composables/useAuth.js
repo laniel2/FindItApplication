@@ -6,6 +6,12 @@ import { useLocalStorage } from './useLocalStorage';
 // It lives in localStorage, so refreshing the page keeps you logged in.
 const token = useLocalStorage('findit.token', null);
 const user = useLocalStorage('findit.user', null);
+const savedAccounts = useLocalStorage('findit.savedAccounts', []);
+
+function rememberAccount(account) {
+  if (!account?.email) return;
+  savedAccounts.value = [account, ...savedAccounts.value.filter((saved) => saved.id !== account.id)];
+}
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!token.value);
@@ -13,6 +19,7 @@ export function useAuth() {
   function setSession(data) {
     token.value = data.token;
     user.value = data.user;
+    rememberAccount(data.user);
   }
 
   async function login(credentials) {
@@ -32,6 +39,7 @@ export function useAuth() {
     if (!token.value) return;
     try {
       user.value = (await api('/auth/me')).user;
+      rememberAccount(user.value);
     } catch (err) {
       if (err.status === 401) logout();
     }
@@ -39,7 +47,8 @@ export function useAuth() {
 
   async function updateProfile(payload) {
     user.value = (await api('/users/me', { method: 'PUT', body: payload })).user;
+    rememberAccount(user.value);
   }
 
-  return { token, user, isLoggedIn, login, register, logout, refresh, updateProfile };
+  return { token, user, savedAccounts, isLoggedIn, login, register, logout, refresh, updateProfile };
 }
